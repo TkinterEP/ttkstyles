@@ -1,0 +1,17 @@
+[theme]
+type = tcl
+name = breeze
+pkg = github
+author = TkinterEP
+repo = ttkthemes
+archive = breeze.zip
+path = ttkthemes/png/breeze/
+commit = v3.1.0
+
+[font]
+family = Roboto
+size = 11
+options = bold, italic
+pkg = remote zip
+path = all
+url = https://fonts.google.com/download?family=Roboto
