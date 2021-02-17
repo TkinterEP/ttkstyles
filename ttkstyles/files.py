@@ -6,8 +6,8 @@ Copyright (c) 2020 RedFantom
 # Standard Library
 import os
 import shutil
+import site
 import tempfile
-from typing import Optional
 from urllib.request import urlretrieve
 import zipfile
 # Packages
@@ -76,6 +76,29 @@ class File(object):
         File.CACHE_DIR = path
 
 
+class SitePackage(File):
+    """Class to handle a file found in a Python site package"""
+
+    def __init__(self, file_name: str, package: str):
+        File.__init__(self, self._find_site_package_file(file_name, package))
+
+    @staticmethod
+    def _find_site_package_file(file_name: str, package: str):
+        """Search for a file in the Python site packages"""
+        for dir in site.getsitepackages():
+            if not os.path.exists(dir):
+                continue
+            for pkg in os.listdir(dir):
+                path = os.path.join(dir, pkg)
+                f = os.path.join(path, file_name)
+                if pkg == package and os.path.exists(f):
+                    return f
+        raise TtkStyleFileUnavailable("Could not find '{}' for package '{}'".format(file_name, package))
+
+    def _make_available(self):
+        pass
+
+
 class RemoteFile(File):
     """Class to handle a remote file"""
 
@@ -89,6 +112,8 @@ class RemoteFile(File):
 
     def _make_available(self):
         """Download the file to the cache directory"""
+        if not os.path.exists(os.path.dirname(self._target)):
+            os.makedirs(os.path.dirname(self._target), exist_ok=True)
         urlretrieve(self._url, self._target)
 
 
@@ -130,6 +155,7 @@ class ZippedFile(File):
 
     @staticmethod
     def _find_file_in_zip(archive: zipfile.ZipFile, path: str) -> zipfile.ZipInfo:
+        path = path.strip("/")
         for f in archive.filelist:
             if f.orig_filename.strip("/") == path:
                 return f
