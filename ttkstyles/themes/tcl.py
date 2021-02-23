@@ -21,8 +21,17 @@ class TclThemeLoader(ThemeLoader):
         entry = self._find_entry_point(self._path)
         if entry is None:
             raise TtkStyleException("Could not find entry point for Tcl theme in '{}'".format(self._path))
+        # Some Tcl packages depend on the working directory being the
+        # directory that the script is in. Sometimes, Tcl scripts may
+        # change their working directory, and we want to guarantee that
+        # after execution of this code it is is the same as before.
         with chdir(self._path):
             try:
+                # Often, Tcl packages refer to a variable named 'dir'
+                # This is expected to be a string containing the abspath
+                # to the directory the script being evaluated is in
+                self._tk.eval("set dir {}".format(self._path))
+
                 self._tk.eval("source {}".format(entry))
             except tk.TclError as e:
                 message, = e.args
