@@ -1,19 +1,21 @@
 import tkinter as tk
 from tkinter import ttk
+from ttkwidgets.frames.balloon import Balloon
 
 class ToggleButton(ttk.Widget):
-    """VERY SIMPLE ToggleButton widget for Ttk, with style support"""
+    """VERY SIMPLE ToggleButton widget for Ttk"""
 
-    def __init__(self, master=None, **kwargs):
+    def __init__(self, master=None, tooltip=None, **kwargs):
         
         ttk.Widget.__init__(self, master, "ttk::checkbutton", kwargs)
-        
         # TODO: Replace the style support check with something like this:
         # self.tk.eval('info exists ttk::theme::azure::ttkstylesSupport')
         try:
             self.configure(style='ToggleButton')
         except:
             self.configure(style='Toolbutton')
+            
+        self._tooltip = Balloon(self, text=tooltip)
 
     def invoke(self):
         """Toggles between the selected and deselected states and
@@ -29,10 +31,11 @@ if __name__ == '__main__':
     root = tk.Tk()
     
     style = ttk.Style(root)
-    root.tk.call('source', 'azure.tcl')
+    root.tk.call('source', 'E:/Azure theme/New azure/azure.tcl')
     style.theme_use('azure')
     
-    toggle = ToggleButton(root, text='ToggleButton')
+    toggle = ToggleButton(root, text='ToggleButton', tooltip='Help text')
     toggle.pack(pady=20)
     
     root.mainloop()
+
