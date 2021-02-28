@@ -15,7 +15,19 @@ def tuple_comp(tup1: tuple, tup2: tuple) -> bool:
 
 
 class TristateWidget(ttk.Widget):
-    """Widget that supports a third, 'partially' selected state"""
+    """
+    Widget that supports a third, 'partially' selected state
+
+    'Normal' widgets do include a third state (tristate) in their
+    operation. Therefore, it must forcibly be set so that the widget is
+    displayed properly.
+
+    The state of the widget is internally tracked in the variable
+    ``_state``, and the widget hooks into the proper Tkinter events
+    to ensure that its display is continuously forced to match that
+    state.
+    """
+
 
     class State(IntEnum):
         NONE = 0
@@ -58,7 +70,7 @@ class TristateWidget(ttk.Widget):
         assert self._variable.get() == (self._state == TristateWidget.State.SELECTED)
 
     def _update_state(self, _: tk.Event = None):
-        """Update the display state of the Widget"""
+        """Force the state of the widget to be alternate if in tristate"""
         self.update_idletasks()
         tkstate = self.state()
         assert isinstance(tkstate, tuple)
@@ -81,3 +93,9 @@ class TristateCheckbutton(TristateWidget):
     def __init__(self, master, **kwargs):
         kwargs.update(style="TCheckbutton")
         TristateWidget.__init__(self, master, "ttk::checkbutton", **kwargs)
+
+
+class TristateRadiobutton(TristateWidget):
+    def __init__(self, master, **kwargs):
+        kwargs.update(style="TRadiobutton")
+        TristateWidget.__init__(self, master, "ttk::radiobutton", **kwargs)
