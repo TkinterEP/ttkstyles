@@ -9,6 +9,7 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Optional
 
+
 class ToolTip(object):
     """
     wait (int): Wait before appearing (in seconds)
@@ -17,10 +18,10 @@ class ToolTip(object):
     ipadx (int): Inner X padding of the tooltip
     ipady (int): Inner Y padding of the tooltip
     """
-    
+
     # TODO: Make themes pick one of these variants for the layout name
     ALLOWED_LAYOUTS = ["ToolTip", "Tooltip", "Tip", "Balloon"]
-    
+
     def __init__(self, master, **kwargs):
         self.master = master
         self._wait = int(kwargs.pop("wait", "2")) * 1000
@@ -39,7 +40,7 @@ class ToolTip(object):
             self.master.bind("<Enter>", self._enter)
             self.master.bind("<Leave>", self._hidetip)
             self.master.bind("<ButtonPress>", self._hidetip)
-        
+
     def _enter(self, *args):
         """Creates a ToolTip, and schedules it"""
         self._toplevel = tk.Toplevel(self.master)
@@ -49,7 +50,7 @@ class ToolTip(object):
             self._toplevel.wm_attributes("-transparentcolor", self._bg)
         self.id0 = self.master.after(self._wait, self._showtip)
         self.id1 = self.master.after(self._duration, self._hidetip)
-        
+
     def _hidetip(self, *args):
         """Destroys the ToolTip"""
         self.master.after_cancel(self.id0)
@@ -69,15 +70,15 @@ class ToolTip(object):
             self.y = self.master.winfo_rooty() + self.master.winfo_reqheight() + 5
         elif self._direction == "right":
             self.x = self.master.winfo_rootx() + self.master.winfo_width() + 5
-            self.y = int(self.master.winfo_rooty()  + (self.master.winfo_height() / 2) - (label.winfo_reqheight() / 2))
+            self.y = int(self.master.winfo_rooty() + (self.master.winfo_height() / 2) - (label.winfo_reqheight() / 2))
         elif self._direction == "left":
             self.x = self.master.winfo_rootx() - label.winfo_reqwidth() - 5
-            self.y = int(self.master.winfo_rooty()  + (self.master.winfo_height() / 2) - (label.winfo_reqheight() / 2))
+            self.y = int(self.master.winfo_rooty() + (self.master.winfo_height() / 2) - (label.winfo_reqheight() / 2))
         elif self._direction == "cursor":
             self.x = label.winfo_pointerx() + 10
             self.y = label.winfo_pointery() + 20
         self._toplevel.geometry("+{}+{}".format(self.x, self.y))
-        
+
     @staticmethod
     def _determine_proper_layout() -> Optional[str]:
         """Enumerate the layout and find one that's valid and return it"""
