@@ -6,6 +6,7 @@ Copyright (c) 2020 RedFantom
 from enum import IntEnum
 import tkinter as tk
 from tkinter import ttk
+import tooltip
 from typing import Dict
 
 
@@ -17,17 +18,15 @@ def tuple_comp(tup1: tuple, tup2: tuple) -> bool:
 class TristateWidget(ttk.Widget):
     """
     Widget that supports a third, 'partially' selected state
-
     'Normal' widgets do include a third state (tristate) in their
     operation. Therefore, it must forcibly be set so that the widget is
     displayed properly.
-
     The state of the widget is internally tracked in the variable
     ``_state``, and the widget hooks into the proper Tkinter events
     to ensure that its display is continuously forced to match that
     state.
     """
-
+    
 
     class State(IntEnum):
         NONE = 0
@@ -92,10 +91,14 @@ class TristateWidget(ttk.Widget):
 class TristateCheckbutton(TristateWidget):
     def __init__(self, master, **kwargs):
         kwargs.update(style="TCheckbutton")
+        tooltiptext = kwargs.pop("tooltip", None)
         TristateWidget.__init__(self, master, "ttk::checkbutton", **kwargs)
+        self._tooltip = tooltip.ToolTip(self, text=tooltiptext)
 
 
 class TristateRadiobutton(TristateWidget):
     def __init__(self, master, **kwargs):
         kwargs.update(style="TRadiobutton")
+        tooltiptext = kwargs.pop("tooltip", None)
         TristateWidget.__init__(self, master, "ttk::radiobutton", **kwargs)
+        self._tooltip = tooltip.ToolTip(self, text=tooltiptext)
