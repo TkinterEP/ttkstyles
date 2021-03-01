@@ -5,6 +5,7 @@ Copyright (c) 2021 RedFantom
 """
 import tkinter as tk
 from tkinter import ttk
+import tooltip
 from typing import Optional
 
 
@@ -25,6 +26,7 @@ class SwitchButton(ttk.Checkbutton):
         """
         allow_fallback = kwargs.pop("allow_fallback", False)
         layout = kwargs.pop("style", None)
+        tooltiptext = kwargs.pop("tooltip", None)
 
         if layout is None:
             layout = self._determine_proper_layout()
@@ -35,6 +37,7 @@ class SwitchButton(ttk.Checkbutton):
 
         kwargs.update(style=layout)
         ttk.Checkbutton.__init__(self, *args, **kwargs)
+        self._tooltip = tooltip.ToolTip(self, text=tooltiptext)
 
 
     @staticmethod
