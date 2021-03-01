@@ -1,5 +1,8 @@
 """
 Author: rdbende and RedFantom
+License: GNU GPLv3
+Copyright (c) ToolTip: rdbende 2021
+Copyright (c) stylecheck: RedFantom 2021
 """
 
 import tkinter as tk
@@ -8,13 +11,14 @@ from typing import Optional
 
 class ToolTip(object):
     """
-        wait (int): Wait before appearing (in seconds)
-        duration (int): Wait before disappearing (in seconds)
-        direction (str): Direction relative to the parent. Directions: cursor, above, below, right, left
-        ipadx (int): Inner X padding of the tooltip
-        ipady (int): Inner Y padding of the tooltip
+    wait (int): Wait before appearing (in seconds)
+    duration (int): Wait before disappearing (in seconds)
+    direction (str): Direction relative to the parent. Directions: cursor, above, below, right, left
+    ipadx (int): Inner X padding of the tooltip
+    ipady (int): Inner Y padding of the tooltip
     """
     
+    # TODO: Make themes pick one of these variants for the layout name
     ALLOWED_LAYOUTS = ["ToolTip", "Tooltip", "Tip", "Balloon"]
     
     def __init__(self, master, **kwargs):
@@ -31,9 +35,10 @@ class ToolTip(object):
         else:
             kwargs.update(style=self._layout)
         self.kwargs = kwargs
-        self.master.bind("<Enter>", self._enter)
-        self.master.bind("<Leave>", self._hidetip)
-        self.master.bind("<ButtonPress>", self._hidetip)
+        if kwargs["text"] is not None:
+            self.master.bind("<Enter>", self._enter)
+            self.master.bind("<Leave>", self._hidetip)
+            self.master.bind("<ButtonPress>", self._hidetip)
         
     def _enter(self, *args):
         """Creates a ToolTip, and schedules it"""
@@ -76,12 +81,12 @@ class ToolTip(object):
     @staticmethod
     def _determine_proper_layout() -> Optional[str]:
         """Enumerate the layout and find one that's valid and return it"""
-        style = ttk.Style()
+        style = ttk.Style()  # Style created with default root
         for layout in ToolTip.ALLOWED_LAYOUTS:
             try:
                 style.layout(layout)
                 bg = style.lookup(".", "background")
-                return layout, bg
+                return layout, bg  # Return if there is no error
             except tk.TclError:
-                continue   
-        return None, None
+                continue  # Error must be caught this way, checking otherwise not possible
+        return None, None  # Return None if no valid layout found
