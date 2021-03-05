@@ -11,18 +11,27 @@ from typing import Optional
 
 
 class ToolTip(object):
-    """
-    wait (int): Wait before appearing (in seconds)
-    duration (int): Wait before disappearing (in seconds)
-    direction (str): Direction relative to the parent. Directions: cursor, above, below, right, left
-    ipadx (int): Inner X padding of the tooltip
-    ipady (int): Inner Y padding of the tooltip
-    """
 
     # TODO: Make themes pick one of these variants for the layout name
     ALLOWED_LAYOUTS = ["ToolTip", "Tooltip", "Tip", "Balloon"]
 
     def __init__(self, master, **kwargs):
+        """
+        Create a styleable ToolTip
+        
+        :param wait: wait before appearing (in seconds)
+        :type wait: int
+        :param duration: wait before disappearing (in seconds)
+        :type duration: int
+        :param direction: direction relative to the parent
+            directions: cursor, above, below, right, left (default is cursor)
+        :type: str
+        :param ipadx: inner X padding of the tooltip
+        :type ipadx: int
+        :param ipady: inner Y padding of the tooltip
+        :type ipady: int
+        :param kwargs: options to be passed on to the :class:`ttk.Label` initializer inside the tooltip
+        """
         self.master = master
         self._wait = int(kwargs.pop("wait", "2")) * 1000
         self._duration = int(kwargs.pop("duration", "10")) * 1000
