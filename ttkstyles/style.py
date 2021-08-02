@@ -93,8 +93,14 @@ class Style(ttk.Style):
         ttk.Style.__init__(self, tkinst)
         self.tkinst = tkinst
 
-        self._allow_override = allow_override
+        # Load tksvg is available
+        try:
+            import tksvg
+            tksvg.load(self.tkinst)
+        except ImportError:
+            pass
 
+        self._allow_override = allow_override
         self._settings = None
 
         if auto_load:
