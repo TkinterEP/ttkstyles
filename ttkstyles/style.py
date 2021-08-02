@@ -102,7 +102,6 @@ class Style(ttk.Style):
 
         self._allow_override = allow_override
         self._settings = None
-
         if auto_load:
             self._load_auto()
 
@@ -128,9 +127,17 @@ class Style(ttk.Style):
         parser = StyleFile(path)
         theme, name, type = parser.theme
         self.load_theme(theme, type)
+        try:
+            import tkextrafont
+        except ImportError:
+            import warnings
+            warnings.warn("Failed to load tkextrafont - no external fonts will be available", ImportWarning)
+            return
+        for font_tup in parser.fonts:
+            self.load_font(font_tup)
         font = parser.font
         if font is not None:
-            self.load_font(font)
+            self.configure(".", font=(font[0],)+font[1])
 
     def load_style_file(self, f: (File, str)):
         """Load style settings from example.ttkstyle file specified as File or as path"""
@@ -167,16 +174,15 @@ class Style(ttk.Style):
 
         self.set_theme(theme)
 
-    def load_font(self, font: Tuple[File, str, Tuple[str, ...]]):
+    def load_font(self, font: Tuple[File, str]):
         """
         Load a font application wide by modifying the base style
 
         :param font: Tuple that starts with a file specifying the font
-            file that should be loaded, followed by the font name and
-            then any options applied to the font
-        :type font: Tuple[File, str, Tuple[str, ...]]
+            file that should be loaded, followed by the font name
+        :type font: Tuple[File, str]
         """
-        f, family, options = font
+        f, family = font
         if f is not None:
             try:
                 import tkextrafont
@@ -187,7 +193,6 @@ class Style(ttk.Style):
             font = tkextrafont.Font(file=f.abspath)
             if not font.is_font_available(family):
                 raise TtkStyleException("Specified font file did not provide specified font family")
-        self.configure(".", font=(family,)+options)
 
     def set_theme(self, name: str):
         """Set the currently applied theme to a specific theme name"""

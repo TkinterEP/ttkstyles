@@ -1,1 +1,3 @@
 appdirs>=1.4.0
+tkextrafont>=0.6.3
+tksvg>=0.7.4

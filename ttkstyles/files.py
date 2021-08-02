@@ -175,7 +175,9 @@ class ZippedFile(File):
 
 class RemoteZippedFile(ZippedFile):
     """Handle a file that is in a remote ZIP-archive file"""
-    def __init__(self, path: str, name: str, url: str, root=True):
+    def __init__(self, path: str, url: str, name: str=None, root=True):
+        if name is None:
+            name = url.split("/")[-1]
         ZippedFile.__init__(self, path, RemoteFile(name, url), root)
 
 

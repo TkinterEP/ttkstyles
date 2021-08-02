@@ -1,6 +1,6 @@
 [theme]
-type = tcl
 name = azure
+type = tcl
 pkg = github
 author = rdbende
 repo = Azure-ttk-theme
@@ -12,6 +12,8 @@ commit = 2a330ce
 family = Roboto
 size = 11
 options = bold, italic
+
+[font:Roboto]
 pkg = remote zip
 archive = roboto.zip
 path = all

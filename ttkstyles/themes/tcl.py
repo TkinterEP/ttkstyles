@@ -44,13 +44,12 @@ class TclThemeLoader(ThemeLoader):
         if theme is None:
             raise TtkStyleException("Loading '{}' from '{}' did not yield a theme. Is there a package provide line?"
                 .format(entry, self._path))
-
-        self._tk.call("package", "require", theme)
+        self._tk.call("package", "require", "ttk::theme::{}".format(theme))
         return theme
         
     @property
     def _loaded_pkgs(self) -> Tuple[str, ...]:
-        return self._tk.call("package", "names")
+        return self._tk.call("ttk::themes")
 
     @staticmethod
     def _find_entry_point(path: str) -> Optional[str]:

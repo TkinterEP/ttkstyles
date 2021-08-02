@@ -8,7 +8,6 @@ c = ttk.Checkbutton(window, text="Hello World")
 
 for i, image in enumerate(c.image_names()):
     ttk.Label(window, image=image).grid(column=i, row=0)
-    print(image)
 
 
 ttk.Button(window, text="Destroy", command=window.destroy).grid(column=0, columnspan=i, row=1)

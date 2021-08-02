@@ -6,7 +6,7 @@ Copyright (c) 2020 RedFantom
 # Standard Library
 from configparser import ConfigParser
 import os
-from typing import Dict, Optional, Tuple
+from typing import Dict, Generator, Optional, Tuple
 # Project Modules
 from .exceptions import TtkStyleFileUnavailable, TtkStyleFileParseError
 from .files import File, ZippedFile, RemoteFile, RemoteZippedFile, GitHubRepoFile
@@ -36,20 +36,27 @@ class StyleFile(object):
         return self.interpret_file_from_section(theme), theme["name"], theme["type"]
 
     @property
-    def font(self) -> Optional[Tuple[File, str, Tuple[str, ...]]]:
+    def font(self) -> Optional[Tuple[str, Tuple[str, ...]]]:
         """Return font File, family and options tuple"""
         if "font" not in self._config:
             return None
-        font = dict(self._config["font"])
-        f = self.interpret_file_from_section(font)
-        print("Font file: ", f)
         if "family" not in self._config["font"]:
             raise TtkStyleFileParseError("'family' key missing from font section")
         family = self._config["font"]["family"]
         size = self._config["font"].get("size", "default")
         options = self._config["font"].get("options", "")
         options = tuple(map(str.strip, options.split(",")))
-        return f, family, (size,)+options
+        return family, (size,)+options
+
+    @property
+    def fonts(self) -> Generator[Tuple[File, str], None, None]:
+        fonts = filter(lambda x: x.startswith("font:"), self._config.sections())
+        for sec_name in fonts:
+            section = dict(self._config[sec_name])
+            family = section.get("family", None)
+            if family is None:
+                family = sec_name.split(":")[-1]
+            yield self.interpret_file_from_section(section), family
 
     @staticmethod
     def interpret_file_from_section(section: Dict[str, str]) -> File:
@@ -69,9 +76,9 @@ class StyleFile(object):
             return ZippedFile(section["path"], File(section["archive"]), section.get("root", "true") == "true")
 
         elif pkg == "remote zip":
-            StyleFile._validate_key(section, ("archive", "url"))
-            return RemoteZippedFile(section["path"], section["archive"], section["url"],
-                                    section.get("root", "true") == "true")
+            StyleFile._validate_key(section, ("url",))
+            return RemoteZippedFile(section["path"], section["url"], name=section.get("archive", None),
+                                    root=section.get("root", "true") == "true")
 
         elif pkg == "github":
             StyleFile._validate_key(section, ("author", "repo", "commit"))
