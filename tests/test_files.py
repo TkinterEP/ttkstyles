@@ -25,12 +25,10 @@ class TestFiles(TestCase):
         f = files.File("README.md")
         self.assertTrue(os.path.exists(f.abspath))
 
-    def test_zipped_file(self):
-        f = files.ZippedFile("breeze", files.File("breeze.zip"))
+    def test_zipped_and_remote_file(self):
+        rf = files.RemoteFile("azure.zip", "https://github.com/rdbende/Azure-ttk-theme/archive/refs/tags/v1.4.1.zip")
+        f = files.ZippedFile("Azure-ttk-theme-1.4.1/azure", rf)
         self.assertTrue(os.path.exists(f.abspath))
-
-    def test_remote_file(self):
-        pass
 
     def test_github_file(self):
         f = files.GitHubRepoFile("ttkthemes/png/breeze", "TkinterEP", "ttkthemes")

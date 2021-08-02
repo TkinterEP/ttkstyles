@@ -7,7 +7,7 @@ Copyright (c) stylecheck: RedFantom 2021
 
 import tkinter as tk
 from tkinter import ttk
-from typing import Optional
+from typing import Any, Optional, Tuple
 
 
 class ToolTip(object):
@@ -32,6 +32,7 @@ class ToolTip(object):
         :type ipady: int
         :param kwargs: options to be passed on to the :class:`ttk.Label` initializer inside the tooltip
         """
+        self._toplevel = None
         self.master = master
         self._wait = int(kwargs.pop("wait", "2")) * 1000
         self._duration = int(kwargs.pop("duration", "10")) * 1000
@@ -46,9 +47,18 @@ class ToolTip(object):
             kwargs.update(style=self._layout)
         self.kwargs = kwargs
         if kwargs["text"] is not None:
-            self.master.bind("<Enter>", self._enter)
-            self.master.bind("<Leave>", self._hidetip)
-            self.master.bind("<ButtonPress>", self._hidetip)
+            self._bind()
+
+    def _bind(self):
+        self.master.bind("<Enter>", self._enter)
+        self.master.bind("<Leave>", self._hidetip)
+        self.master.bind("<ButtonPress>", self._hidetip)
+
+    def _unbind(self):
+        # TODO: Improve this so as to only unbind our own methods
+        self.master.unbind("<Enter>")
+        self.master.unbind("<Leave>")
+        self.master.unbind("<ButtonPress>")
 
     def _enter(self, *args):
         """Creates a ToolTip, and schedules it"""
@@ -89,7 +99,7 @@ class ToolTip(object):
         self._toplevel.geometry("+{}+{}".format(self.x, self.y))
 
     @staticmethod
-    def _determine_proper_layout() -> Optional[str]:
+    def _determine_proper_layout() -> Optional[Tuple[str, str]]:
         """Enumerate the layout and find one that's valid and return it"""
         style = ttk.Style()  # Style created with default root
         for layout in ToolTip.ALLOWED_LAYOUTS:
@@ -100,3 +110,20 @@ class ToolTip(object):
             except tk.TclError:
                 continue  # Error must be caught this way, checking otherwise not possible
         return None, None  # Return None if no valid layout found
+
+    def configure(self, cnf={}, **kwargs):
+        self.kwargs.update(kwargs)
+
+    def cget(self, key: str) -> Any:
+        return self.kwargs[key]
+
+    def __setitem__(self, key: str, value: Any):
+        return self.configure(key=value)
+
+    def __getitem__(self, key: str) -> Any:
+        return self.cget(key)
+
+    def destroy(self):
+        if self._toplevel is not None:
+            self._toplevel.destroy()
+            self._toplevel = None

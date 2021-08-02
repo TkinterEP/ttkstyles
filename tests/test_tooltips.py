@@ -12,7 +12,7 @@ except ImportError:
     from tkinter import ttk
 from ttkstyles.hooks import is_hooked
 # TODO: Adjust tests for different module
-from ttkstyles.widgets import tooltip
+from ttkstyles import tooltips
 
 
 class TestTooltipsModule(TestCase):
