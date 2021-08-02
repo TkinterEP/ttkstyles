@@ -1,20 +1,28 @@
-[theme]
-name = azure
-type = tcl
-pkg = github
-author = rdbende
-repo = Azure-ttk-theme
-archive = azure.zip
-path = azure/
-commit = 2a330ce
+#theme {
+    name: azure;
+    type: tcl;
+    pkg: github;
+    author: rdbende;
+    repo: Azure-ttk-theme;
+    archive: azure.zip;
+    path: azure/;
+    commit: 2a330ce;
+}
 
-[font]
-family = Roboto
-size = 11
-options = bold, italic
+#font.Roboto {
+    pkg: remote zip;
+    archive: roboto.zip;
+    path: all;
+    url: https://fonts.google.com/download?family=Roboto;
+}
 
-[font:Roboto]
-pkg = remote zip
-archive = roboto.zip
-path = all
-url = https://fonts.google.com/download?family=Roboto
+. {
+    font-family: Roboto;
+    font-size: 12;
+}
+
+Heading.TLabel {
+    font-family: Roboto;
+    font-size: 18;
+    font-color: blue;
+}

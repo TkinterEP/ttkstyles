@@ -4,12 +4,14 @@ License: GNU GPLv3
 Copyright (c) 2020 RedFantom
 """
 # Standard Library
-from configparser import ConfigParser
+import ast
 import os
-from typing import Dict, Generator, Optional, Tuple
+from typing import Any, Dict, Generator, List, Optional, Tuple
 # Project Modules
 from .exceptions import TtkStyleFileUnavailable, TtkStyleFileParseError
 from .files import File, ZippedFile, RemoteFile, RemoteZippedFile, GitHubRepoFile
+# Packages
+import tinycss
 
 
 class StyleFile(object):
@@ -22,40 +24,47 @@ class StyleFile(object):
         if not os.path.exists(path):
             raise TtkStyleFileUnavailable("Could not find style file '{}'".format(path))
 
-        self._config = ConfigParser()
-        with open(path) as fi:
-            self._config.read_file(fi)
+        parser = tinycss.make_parser()
+        with open(path, "rb") as fi:
+            css = parser.parse_stylesheet_bytes(fi.read())
+        self._config = self.css_rules_to_dict(css.rules)
+
+    @staticmethod
+    def css_rules_to_dict(rules: List[tinycss.css21.RuleSet]) -> Dict[str, Dict[str, Any]]:
+        """Convert the tinycss rules to option dictionaries"""
+        rules_dict = dict()
+        print(rules)
+        for rule in rules:
+            key = "".join(map(lambda x: x.value, rule.selector))
+            print(key)
+            rules_dict[key] = {}
+            for option in rule.declarations:
+                option: tinycss.css21.Declaration
+                val = option.value[0].value
+                try:
+                    val = ast.literal_eval(val)
+                except:
+                    pass
+                rules_dict[key][option.name] = val
+        return rules_dict
 
     @property
     def theme(self) -> Tuple[File, str, str]:
         """Return theme File, type and name for the given settings"""
-        if "theme" not in self._config:
+        if "#theme" not in self._config:
             raise TtkStyleFileParseError("Style file does not specify theme, yet it is required.")
-        theme = dict(self._config["theme"])
+        theme = dict(self._config["#theme"])
         StyleFile._validate_key(theme, ("name", "type"))
         return self.interpret_file_from_section(theme), theme["name"], theme["type"]
 
     @property
-    def font(self) -> Optional[Tuple[str, Tuple[str, ...]]]:
-        """Return font File, family and options tuple"""
-        if "font" not in self._config:
-            return None
-        if "family" not in self._config["font"]:
-            raise TtkStyleFileParseError("'family' key missing from font section")
-        family = self._config["font"]["family"]
-        size = self._config["font"].get("size", "default")
-        options = self._config["font"].get("options", "")
-        options = tuple(map(str.strip, options.split(",")))
-        return family, (size,)+options
-
-    @property
     def fonts(self) -> Generator[Tuple[File, str], None, None]:
-        fonts = filter(lambda x: x.startswith("font:"), self._config.sections())
+        fonts = filter(lambda x: x.startswith("#font."), self._config.keys())
         for sec_name in fonts:
             section = dict(self._config[sec_name])
             family = section.get("family", None)
             if family is None:
-                family = sec_name.split(":")[-1]
+                family = sec_name.split(".")[-1]
             yield self.interpret_file_from_section(section), family
 
     @staticmethod
@@ -92,3 +101,28 @@ class StyleFile(object):
         for key in keys:
             if key not in section:
                 raise TtkStyleFileParseError("Expected key '{}' not found in style file".format(key))
+
+    @property
+    def styles(self) -> Dict[str, Dict[str, Any]]:
+        config = {k: v for k, v in self._config.items() if not k.startswith("#")}
+        options = {k: self.style_options_to_tkinter(v) for k, v in config.items()}
+        print(options)
+        return options
+
+    @staticmethod
+    def style_options_to_tkinter(options: Dict[str, Any]) -> Dict[str, Any]:
+        tk_options = {}
+        # Font
+        if "font-family" in options:
+            font = (options.pop("font-family"),)
+            if "font-size" in options:
+                font += (options.pop("font-size"),)
+            if "font-options" in options:
+                font += tuple(map(str.strip, options.pop("font-options").split(",")))
+            tk_options["font"] = font
+        # Colors
+        if "font-color" in options:
+            tk_options["foreground"] = options.pop("font-color")
+        tk_options.update(options)
+
+        return tk_options

@@ -13,6 +13,7 @@ import appdirs
 # Project Modules
 from .exceptions import TtkStyleException, TtkStyleFileUnavailable
 from .files import File
+from . import hooks
 from .parser import StyleFile
 from .themes import LOADERS
 from .utils import filter_suffix, resolve
@@ -91,6 +92,7 @@ class Style(ttk.Style):
             ``example.ttkstyle`` file if it exists.
         """
         ttk.Style.__init__(self, tkinst)
+        hooks.hook_ttk_widgets(_label_option_updater, {"style": None})
         self.tkinst = tkinst
 
         # Load tksvg is available
@@ -135,9 +137,12 @@ class Style(ttk.Style):
             return
         for font_tup in parser.fonts:
             self.load_font(font_tup)
-        font = parser.font
-        if font is not None:
-            self.configure(".", font=(font[0],)+font[1])
+        styles = parser.styles
+        if "." in styles:
+            self.configure(".", **styles.pop("."))
+        for style, options in styles.items():
+            print("Configuring style: {} -> {}".format(style, options))
+            self.configure(style, **options)
 
     def load_style_file(self, f: (File, str)):
         """Load style settings from example.ttkstyle file specified as File or as path"""
@@ -200,3 +205,12 @@ class Style(ttk.Style):
         self.tk.call("ttk::setTheme", name)
 
     theme_use = set_theme
+
+
+def _label_option_updater(inst, _, value):
+    """Hook into ttk.Widget for ttk.Label to have an updated font with a style"""
+    if not isinstance(inst, ttk.Label):
+        return getattr(ttk.Widget, hooks.generate_hook_name({"style": None})).original_configure(inst, option=value)
+    style = ttk.Style(inst)
+    if value is not None:
+        inst.configure(font=style.lookup(value, "font"))
