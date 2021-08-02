@@ -2,6 +2,7 @@
 Author: RedFantom
 License: GNU GPLv3
 Source: The ttkwidgets repository
+
 This file provides a set of functions that can be used for adding
 options to all classes that inherit from ``ttk.Widget``, so `ttk.Button``,
 for example, but also every widget contained in this package.
@@ -9,6 +10,7 @@ When an option is changed, an updater function is called that the
 developer creating the hook has to provide. This updater is called
 after the widget has initialized if the option is set upon
 initialization of the widget.
+
 Default values may be specified as well. For more details, see
 :meth:`hook_ttk_widgets` for more details. See :meth:`tooltip_updater`
 for a practical implementation of a hook.

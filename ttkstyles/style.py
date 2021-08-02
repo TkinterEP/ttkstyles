@@ -7,7 +7,7 @@ Copyright (c) 2020 RedFantom
 import os
 import tkinter as tk
 from tkinter import ttk
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 # Packages
 import appdirs
 # Project Modules
@@ -91,6 +91,7 @@ class Style(ttk.Style):
             ``example.ttkstyle`` file if it exists.
         """
         ttk.Style.__init__(self, tkinst)
+        self.tkinst = tkinst
 
         self._allow_override = allow_override
 
@@ -121,6 +122,9 @@ class Style(ttk.Style):
         parser = StyleFile(path)
         theme, name, type = parser.theme
         self.load_theme(theme, type)
+        font = parser.font
+        if font is not None:
+            self.load_font(font)
 
     def load_style_file(self, f: (File, str)):
         """Load style settings from example.ttkstyle file specified as File or as path"""
@@ -132,7 +136,7 @@ class Style(ttk.Style):
     def load_style(self, theme: (File, str), font: (File, str),
                    tooltips: Dict[str, Any] = None, padding: Dict[str, Any] = None):
         """Load a style based on specific settings"""
-        pass
+        raise NotImplementedError()
 
     def load_theme(self, f: (File, str), type: str):
         """Load a theme from a directory"""
@@ -156,6 +160,28 @@ class Style(ttk.Style):
         theme = loader.load()
 
         self.set_theme(theme)
+
+    def load_font(self, font: Tuple[File, str, Tuple[str, ...]]):
+        """
+        Load a font application wide by modifying the base style
+
+        :param font: Tuple that starts with a file specifying the font
+            file that should be loaded, followed by the font name and
+            then any options applied to the font
+        :type font: Tuple[File, str, Tuple[str, ...]]
+        """
+        f, family, options = font
+        if f is not None:
+            try:
+                import tkextrafont
+            except ImportError:
+                import warnings
+                warnings.warn("Failed to load font support", ImportWarning)
+                return
+            font = tkextrafont.Font(file=f.abspath)
+            if not font.is_font_available(family):
+                raise TtkStyleException("Specified font file did not provide specified font family")
+        self.configure(".", font=(family,)+options)
 
     def set_theme(self, name: str):
         """Set the currently applied theme to a specific theme name"""

@@ -1,4 +1,3 @@
-
 """
 Author: RedFantom
 License: GNU GPLv3

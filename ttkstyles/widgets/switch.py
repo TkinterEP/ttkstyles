@@ -36,7 +36,6 @@ class SwitchButton(ttk.Checkbutton):
         kwargs.update(style=layout)
         ttk.Checkbutton.__init__(self, *args, **kwargs)
 
-
     @staticmethod
     def _determine_proper_layout() -> Optional[str]:
         """Enumerate the layout and find one that's valid and return it"""

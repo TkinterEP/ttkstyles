@@ -6,7 +6,7 @@ Copyright (c) 2020 RedFantom
 # Standard Library
 from configparser import ConfigParser
 import os
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 # Project Modules
 from .exceptions import TtkStyleFileUnavailable, TtkStyleFileParseError
 from .files import File, ZippedFile, RemoteFile, RemoteZippedFile, GitHubRepoFile
@@ -36,9 +36,20 @@ class StyleFile(object):
         return self.interpret_file_from_section(theme), theme["name"], theme["type"]
 
     @property
-    def font(self) -> Tuple[File, str, Tuple[str, ...]]:
+    def font(self) -> Optional[Tuple[File, str, Tuple[str, ...]]]:
         """Return font File, family and options tuple"""
-        raise NotImplementedError()
+        if "font" not in self._config:
+            return None
+        font = dict(self._config["font"])
+        f = self.interpret_file_from_section(font)
+        print("Font file: ", f)
+        if "family" not in self._config["font"]:
+            raise TtkStyleFileParseError("'family' key missing from font section")
+        family = self._config["font"]["family"]
+        size = self._config["font"].get("size", "default")
+        options = self._config["font"].get("options", "")
+        options = tuple(map(str.strip, options.split(",")))
+        return f, family, (size,)+options
 
     @staticmethod
     def interpret_file_from_section(section: Dict[str, str]) -> File:

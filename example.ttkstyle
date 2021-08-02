@@ -1,17 +1,18 @@
 [theme]
 type = tcl
-name = breeze
+name = azure
 pkg = github
-author = TkinterEP
-repo = ttkthemes
-archive = breeze.zip
-path = ttkthemes/png/breeze/
-commit = v3.1.0
+author = rdbende
+repo = Azure-ttk-theme
+archive = azure.zip
+path = azure/
+commit = 2a330ce
 
 [font]
 family = Roboto
 size = 11
 options = bold, italic
 pkg = remote zip
+archive = roboto.zip
 path = all
 url = https://fonts.google.com/download?family=Roboto

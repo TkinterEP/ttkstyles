@@ -14,7 +14,6 @@ class ToggleButton(ttk.Checkbutton):
     # TODO: Make themes pick one of these variants for the layout name
     ALLOWED_LAYOUTS = ["ToggleButton", "Togglebutton", "Toggle"]
 
-
     def __init__(self, *args, **kwargs):
         """
         :param allow_fallback: Boolean to indicate whether falling back
@@ -35,7 +34,6 @@ class ToggleButton(ttk.Checkbutton):
 
         kwargs.update(style=layout)
         ttk.Checkbutton.__init__(self, *args, **kwargs)
-
 
     @staticmethod
     def _determine_proper_layout() -> Optional[str]:

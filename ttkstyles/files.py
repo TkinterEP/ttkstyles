@@ -137,8 +137,11 @@ class ZippedFile(File):
                 path = "{}{}".format(self._find_topmost_folder(fi), self._path)
             else:
                 path = self._path
-            f = self._find_file_in_zip(fi, path)
-            self._extract(fi, f, self._target)
+            if path != "all":
+                f = self._find_file_in_zip(fi, path)
+                self._extract(fi, f, self._target)
+            else:
+                fi.extractall(self._target)
 
     @staticmethod
     def _extract(archive: zipfile.ZipFile, info: zipfile.ZipInfo, target: str):
@@ -148,7 +151,7 @@ class ZippedFile(File):
             archive.extractall(extract_to)
             path = os.path.join(extract_to, info.orig_filename)
             os.makedirs(os.path.dirname(target), exist_ok=True)
-            shutil.copytree(path, target)
+            shutil.copytree(path, target, dirs_exist_ok=True)
             shutil.rmtree(path)
         else:
             archive.extract(info, target)
