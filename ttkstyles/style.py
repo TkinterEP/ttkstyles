@@ -213,4 +213,4 @@ def _label_option_updater(inst, _, value):
         return getattr(ttk.Widget, hooks.generate_hook_name({"style": None})).original_configure(inst, option=value)
     style = ttk.Style(inst)
     if value is not None:
-        inst.configure(font=style.lookup(value, "font"))
+        inst.configure(font=style.lookup(value, "font"), foreground=style.lookup(value, "foreground"))
