@@ -15,12 +15,8 @@ Default values may be specified as well. For more details, see
 :meth:`hook_ttk_widgets` for more details. See :meth:`tooltip_updater`
 for a practical implementation of a hook.
 """
-try:
-    import Tkinter as tk
-    import ttk
-except ImportError:
-    import tkinter as tk
-    from tkinter import ttk
+from tkinter import ttk
+import typing
 
 
 def is_hooked(options):
@@ -39,8 +35,10 @@ def generate_hook_name(options):
     return "WidgetHook_" + "_".join(sorted(options))
 
 
-def hook_ttk_widgets(updater, options):
-    # type: (callable, dict) -> str
+def hook_ttk_widgets(
+        updater: typing.Callable[[ttk.Widget, str, typing.Any], None],
+        options: dict,
+) -> str:
     """
     Create a hook in either tk.Widget or ttk.Widget to support options
     This function works by overriding the ``__init__``, ``configure``,
