@@ -8,11 +8,10 @@ from tkinter import ttk
 from typing import Optional
 
 
-class ToggleButton(ttk.Checkbutton):
+class CustomCheckbutton(ttk.Checkbutton):
     """Button that is like a checkbox, but looks different"""
 
-    # TODO: Make themes pick one of these variants for the layout name
-    ALLOWED_LAYOUTS = ["ToggleButton", "Togglebutton", "Toggle"]
+    ALLOWED_LAYOUTS = []
 
     def __init__(self, *args, **kwargs):
         """
@@ -35,14 +34,22 @@ class ToggleButton(ttk.Checkbutton):
         kwargs.update(style=layout)
         ttk.Checkbutton.__init__(self, *args, **kwargs)
 
-    @staticmethod
-    def _determine_proper_layout() -> Optional[str]:
+    @classmethod
+    def _determine_proper_layout(cls) -> Optional[str]:
         """Enumerate the layout and find one that's valid and return it"""
         style = ttk.Style()  # Style created with default root
-        for layout in ToggleButton.ALLOWED_LAYOUTS:
+        for layout in cls.ALLOWED_LAYOUTS:
             try:
                 style.layout(layout)
                 return layout  # Return if there is no error
             except tk.TclError:
                 continue  # Error must be caught this way, checking otherwise not possible
         return None  # Return None if no valid layout found
+
+
+class ToggleButton(CustomCheckbutton):
+    ALLOWED_LAYOUTS = ["ToggleButton", "Togglebutton", "Toggle"]
+
+
+class SwitchButton(CustomCheckbutton):
+    ALLOWED_LAYOUTS = ["Switch", "SwitchButton", "Switchbutton", "ToggleButton", "Togglebutton", "Toggle"]
