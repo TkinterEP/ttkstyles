@@ -4,13 +4,8 @@ License: GNU GPLv3
 Source: The ttkwidgets repository
 """
 from unittest import TestCase
-
-try:
-    import Tkinter as tk
-    import ttk
-except ImportError:
-    import tkinter as tk
-    from tkinter import ttk
+import tkinter as tk
+from tkinter import ttk
 from ttkstyles.hooks import hook_ttk_widgets, generate_hook_name, is_hooked
 
 
