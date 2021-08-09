@@ -154,6 +154,9 @@ class Style(ttk.Style, metaclass=TkSingleton):
         ttk.Style.__init__(self, master)
         if not hooks.is_hooked({"style": None}):
             hooks.hook_ttk_widgets(_label_option_updater, {"style": None})
+            tk.Grid._original_grid = tk.Grid.grid
+            tk.Grid.grid = tk.Grid.grid_configure = tk.Grid.config = tk.Grid.configure = _hook_grid_configure
+
         self.tkinst = ttk.setup_master(master)
 
         # Load tksvg is available
@@ -163,6 +166,7 @@ class Style(ttk.Style, metaclass=TkSingleton):
         except ImportError:
             pass
 
+        self._grid_options = {}
         self._allow_override = allow_override
         self._settings = None
         if auto_load:
@@ -203,6 +207,8 @@ class Style(ttk.Style, metaclass=TkSingleton):
             self.configure(".", **styles.pop("."))
         for style, options in styles.items():
             print("Configuring style: {} -> {}".format(style, options))
+            if "grid" in options:
+                self._grid_options[style] = options.pop("grid")
             self.configure(style, **options)
 
     def load_style_file(self, f: (File, str)):
@@ -267,6 +273,37 @@ class Style(ttk.Style, metaclass=TkSingleton):
 
     theme_use = set_theme
 
+    @staticmethod
+    def style_hierarchy(style_name: str) -> Tuple[str]:
+        elements = style_name.split(".")
+        name = elements[-1]
+        styles = [".", name]
+        if len(elements) > 1:
+            for element in list(reversed(elements))[1:]:
+                name = "{}.{}".format(element, name)
+                styles.append(name)
+        return tuple(styles)
+
+    @staticmethod
+    def root_style(widget: tk.BaseWidget) -> str:
+        """Return the root style for a widget"""
+        # TODO: LabeledScale?
+        orientation = (ttk.Scrollbar, ttk.Scale, ttk.Separator)
+        without_t = (ttk.Treeview,)
+        # Walk the MRO
+        cls = None
+        for cls in widget.__class__.mro():
+            if inspect.getmodule(cls) is ttk:
+                break
+        if inspect.getmodule(cls) is not ttk:
+            raise RuntimeError("root_style() called for an unsupported class: {}".format(widget))
+        root = cls.__name__
+        if cls not in without_t:
+            root = "T" + root
+        if cls in orientation:
+            root = "{}.{}".format(str(widget.cget("orient")).capitalize(), root)
+        return root
+
 
 def _label_option_updater(inst, _, value):
     """Hook into ttk.Widget for ttk.Label to have an updated font with a style"""
@@ -275,3 +312,15 @@ def _label_option_updater(inst, _, value):
     style = ttk.Style(inst)
     if value is not None:
         inst.configure(font=style.lookup(value, "font"), foreground=style.lookup(value, "foreground"))
+
+
+def _hook_grid_configure(inst, cnf={}, **kwargs):
+    cnf = tk._cnfmerge((cnf, kwargs))
+    options = {}
+    style_inst = Style(inst)
+    root = inst.cget("style") or Style.root_style(inst)
+    for style in Style.style_hierarchy(root):
+        if style in style_inst._grid_options:
+            options.update(style_inst._grid_options[style])
+    options.update(cnf)
+    return inst._original_grid(**options)

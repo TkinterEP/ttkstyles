@@ -25,4 +25,6 @@ Heading.TLabel {
     font-family: Roboto;
     font-size: 18;
     font-color: blue;
+    grid-pady: (0, 10);
+    grid-sticky: we;
 }

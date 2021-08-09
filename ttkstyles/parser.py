@@ -12,6 +12,7 @@ from .exceptions import TtkStyleFileUnavailable, TtkStyleFileParseError
 from .files import File, ZippedFile, RemoteFile, RemoteZippedFile, GitHubRepoFile
 # Packages
 import tinycss
+import tinycss.token_data
 
 
 class StyleFile(object):
@@ -40,7 +41,7 @@ class StyleFile(object):
             rules_dict[key] = {}
             for option in rule.declarations:
                 option: tinycss.css21.Declaration
-                val = option.value[0].value
+                val = StyleFile.flatten_to_string(option.value[0])
                 try:
                     val = ast.literal_eval(val)
                 except:
@@ -124,5 +125,23 @@ class StyleFile(object):
         if "font-color" in options:
             tk_options["foreground"] = options.pop("font-color")
         tk_options.update(options)
+        # Grid
+        for option, value in options.copy().items():
+            if option.startswith("grid-"):
+                if "grid" not in tk_options:
+                    tk_options["grid"] = {}
+                tk_options["grid"][option[5:]] = value
 
         return tk_options
+
+    @staticmethod
+    def flatten_to_string(container: (tinycss.token_data.ContainerToken, tinycss.token_data.Token)) -> str:
+        if not container.is_container:
+            return container.value
+        string = ""
+        for element in container.content:
+            if element.is_container:
+                string += StyleFile.flatten_to_string(element)
+            else:
+                string += str(element.value)
+        return string
