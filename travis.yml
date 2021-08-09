@@ -1,0 +1,19 @@
+language: python
+required: sudo
+python:
+  - "3.6"
+  - "3.7"
+  - "3.8"
+before_install:
+  - "export DISPLAY=:99.0"
+  - sudo systemctl start xvfb
+  - sleep 3
+install:
+  - sudo apt-get install python-tk python3-tk
+  - python -m pip install -U setuptools pip
+  - python -m pip install coverage codecov nose
+  - python -m pip install -r requirements.txt
+script:
+  - python -m nose --with-coverage --cover-xml
+after_success:
+  - codecov
