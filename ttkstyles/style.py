@@ -4,10 +4,13 @@ License: GNU GPLv3
 Copyright (c) 2020 RedFantom
 """
 # Standard Library
+import inspect
 import os
+from threading import Lock
 import tkinter as tk
 from tkinter import ttk
 from typing import Any, Dict, Tuple
+import weakref
 # Packages
 import appdirs
 # Project Modules
@@ -19,7 +22,64 @@ from .themes import LOADERS
 from .utils import filter_suffix, resolve
 
 
-class Style(ttk.Style):
+class TkSingleton(type):
+    """
+    Ensure that only one instance per Tk instance exists
+
+    While tkinter does not technically support multiple Tk instances, it
+    is not impossible to define multiple Tk instances. Hence, this
+    metaclass is here to ensure that only a single Style exists per Tk
+    instance, rather than a single Style instance overall.
+    """
+    _instances = weakref.WeakKeyDictionary()
+    _lock = Lock()
+
+    _ROOT_KWARGS = {"root", "master"}
+
+    def __init__(cls, *args, **kwargs):
+        """Validate the use of TkSingleton by another class"""
+        super().__init__(*args, **kwargs)
+        if len(TkSingleton._init_parameters(cls).intersection(TkSingleton._ROOT_KWARGS)) == 0:
+            raise RuntimeError("Invalid class to use TkSingleton: {}".format(cls))
+
+    def __call__(cls, *args, **kwargs):
+        """Intercept creation of an instance to find any existing instance"""
+        with cls._lock:
+            if any(kwarg in kwargs for kwarg in TkSingleton._ROOT_KWARGS):
+                root = kwargs.get(set(kwargs.keys()).intersection(TkSingleton._ROOT_KWARGS).pop())
+            elif len(args) != 0 and args[0] != None:
+                args = list(args)
+                root = args.pop()
+                args = tuple(args)
+            else:
+                root = tk._get_default_root()
+            root = TkSingleton.walk_to_tk(root)
+
+            root_args = TkSingleton._init_parameters(cls)
+            kwarg = root_args.intersection(TkSingleton._ROOT_KWARGS).pop()
+            kwargs.update({kwarg: root})
+
+            instance = cls._instances.get(root, None)
+            if instance is None or instance() is None:
+                instance = super().__call__(*args, **kwargs)
+                cls._instances[root] = weakref.ref(instance)
+                return instance
+            return instance()
+
+    @staticmethod
+    def walk_to_tk(widget: tk.BaseWidget):
+        """Get the tk.Tk root instance for a tk.BaseWidget"""
+        while not isinstance(widget, tk.Tk):
+            widget = widget._root()
+        return widget
+
+    @staticmethod
+    def _init_parameters(cls):
+        """Get the parameter names for the __init__ function of a class"""
+        return set(map(lambda param: param.name, inspect.signature(cls.__init__).parameters.values()))
+
+
+class Style(ttk.Style, metaclass=TkSingleton):
     """
     Loader for ttk styles with fonts, Tcl themes, Python themes and more
 
@@ -78,11 +138,11 @@ class Style(ttk.Style):
     THEME_PY = "python"
     THEME_GTK = "gtk"
 
-    def __init__(self, tkinst: tk.Tk, allow_override: bool = True, auto_load: bool = True):
+    def __init__(self, master: tk.Tk=None, allow_override: bool = True, auto_load: bool = True):
         """
         Set-up the loader for a tk.Tk instance
 
-        :param tkinst: tk.Tk instance to set up this Style for.
+        :param master: tk.Tk instance to set up this Style for.
             Remember, only one tk.Tk instance is supported by Tkinter
             itself under normal circumstances.
         :param allow_override: Whether to allow overriding the specified
@@ -91,9 +151,10 @@ class Style(ttk.Style):
         :param auto_load: Whether to automatically load from the file
             ``example.ttkstyle`` file if it exists.
         """
-        ttk.Style.__init__(self, tkinst)
-        hooks.hook_ttk_widgets(_label_option_updater, {"style": None})
-        self.tkinst = tkinst
+        ttk.Style.__init__(self, master)
+        if not hooks.is_hooked({"style": None}):
+            hooks.hook_ttk_widgets(_label_option_updater, {"style": None})
+        self.tkinst = ttk.setup_master(master)
 
         # Load tksvg is available
         try:
