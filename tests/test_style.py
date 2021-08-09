@@ -32,6 +32,24 @@ class TestStyle(TestCase):
 
         second = tk.Tk()
         self.assertIsNot(style, Style(second))
+        second.destroy()
 
     def test_tk_singleton(self):
         self.assertRaises(RuntimeError, define_invalid_cls)
+
+    def test_example(self):
+        style = Style(self.window)
+        style.load_style_file("example.ttkstyle")
+        w = self.window
+
+        for i, image in enumerate(w.image_names()):
+            ttk.Label(w, image=image).grid(column=i, row=0)
+
+        label = ttk.Label(w, text="Heading", style="Heading.TLabel")
+        label.grid(column=0, columnspan=i, row=1)
+        ttk.Button(w, text="Destroy", command=w.destroy).grid(column=0, columnspan=i, row=2)
+
+        w.update()
+
+    def tearDown(self):
+        self.window.destroy()
